@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Sends requests and receives responses
         while (!selector.keys().isEmpty()) {
-            if (selector.select(100) == 0) {
+            if (selector.select(10) == 0) {
                 continue;
             }
 
