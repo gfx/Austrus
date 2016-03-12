@@ -188,19 +188,6 @@ public class MainActivity extends AppCompatActivity {
             rawResponse = new ByteArrayOutputStream(1024);
         }
 
-        SocketChannel connect() throws IOException {
-            int port = uri.getPort();
-            if (port == -1) {
-                port = 80;
-            }
-
-            SocketChannel socket = SocketChannel.open();
-            socket.configureBlocking(false);
-            socket.connect(new InetSocketAddress(uri.getHost(), port));
-
-            return socket;
-        }
-
         ByteBuffer getRequestBuffer() {
             return byteBuffer;
         }
@@ -230,13 +217,22 @@ public class MainActivity extends AppCompatActivity {
 
         Map<SocketChannel, HttpRequest> requests = new HashMap<>();
 
+        // connects
         for (Uri uri : uris) {
-            HttpRequest request = new HttpRequest(uri);
-            SocketChannel channel = request.connect();
+            int port = uri.getPort();
+            if (port == -1) {
+                port = 80;
+            }
+
+            SocketChannel channel = SocketChannel.open();
+            channel.configureBlocking(false);
+            channel.connect(new InetSocketAddress(uri.getHost(), port));
             channel.register(selector, SelectionKey.OP_CONNECT);
-            requests.put(channel, request);
+
+            requests.put(channel, new HttpRequest(uri));
         }
 
+        // Sends requests and receives responses
         while (!selector.keys().isEmpty()) {
             if (selector.select(100) == 0) {
                 continue;
